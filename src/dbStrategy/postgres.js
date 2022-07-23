@@ -1,6 +1,6 @@
 import pkg from 'pg';
 
-const {Poll} = pkg;
+const {Pool} = pkg;
 
 const connection = new Pool({
     connectionString: process.env.DATABASE_URL,
