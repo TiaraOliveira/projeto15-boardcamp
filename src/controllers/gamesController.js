@@ -15,21 +15,30 @@ export async function getGames(req, res){
 
 export async function postGames(req, res){
     const newGame = req.body
-    const entrySchema = joi.object({
+    const gameSchema = joi.object({
         name: joi.string().required(),
-        stockTotal: joi.number().required(),
-        pricePerDay: joi.number().required()
+        image: joi.required(),
+        stockTotal: joi.number().min(1).required(),
+        pricePerDay: joi.number().integer().min(1).required(), 
+        categoryId: joi.number().integer().required()
+     
       });
-      const { error } = entrySchema.validate(entry);
+      const { error } = gameSchema.validate(newGame);
       if (error) {
         return res.sendStatus(400);
       }
-    //- não pode ser nome que já existe
+    
     try {
-        res.sedStatus(201)
-        await connection.query('INSERT INTO games (name, image, "stockTotal", "categoryID", "pricePerDay") VALUES ($1, $2, $3, $4, $5)', [newGame.name, newGame.image, newGame.stockTotal, newGame.categoryId, newGame.pricePerDay])
-        res.Status(201).send("Game novo inserido")
+        const games = await connection.query(`SELECT name FROM games`)
+        const gamesName = games.rows.map(e => e.name)
+        const existGame = gamesName.find(e => e == newGame.name)
+        if(existGame){
+            return res.status(409).send("Categoria já existe")
+        }
+        await connection.query(`INSERT INTO games (name, image, "stockTotal", "categoryId", "pricePerDay") VALUES ('${newGame.name}', '${newGame.image}', '${newGame.stockTotal}', '${newGame.categoryId}', '${newGame.pricePerDay}')`)
+        res.sendStatus(201)
     } catch (error) {
+        console.log(error)
         res.status(500).send("Erro no servidor")
     }
 
