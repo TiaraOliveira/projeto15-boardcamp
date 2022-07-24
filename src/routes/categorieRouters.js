@@ -3,7 +3,7 @@ import { Router } from 'express';
 
 const router = Router();
 
-router.get('/categorie', getCategorie);
-router.post('/categorie', postCategories)
+router.get('/categories', getCategorie);
+router.post('/categories', postCategories)
 
 export default router;

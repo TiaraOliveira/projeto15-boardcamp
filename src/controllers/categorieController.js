@@ -7,20 +7,22 @@ export async function getCategorie(req, res){
 }
 
 export async function postCategories(req, res){
-    const body = req.body
+    const newCategories = req.body
+    console.log(req)
     const entrySchema = joi.object({
         name: joi.string().required()
       });
-      const { error } = entrySchema.validate(entry);
+      const { error } = entrySchema.validate(newCategories);
       if (error) {
         return res.sendStatus(400);
       }
-    //precisa verificar tbem se o jogo já não existe
+     
     try {
-        res.sedStatus(201)
-        await connection.query('INSERT INTO categories (name) VALUES (${body.name})')
+        
+        await connection.query(`INSERT INTO categories (name) VALUES ('${newCategories.name}');`)
+        res.status(200).send("Categoria cadastrado com sucesso");
     } catch (error) {
+        console.log(error)
         res.status(500).send("Erro no servidor")
     }
-
 }
