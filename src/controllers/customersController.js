@@ -10,26 +10,41 @@ export async function getCostumers(req, res){
     }
     
 }
+export async function getCostumersbyId(req, res){
+    const {id} = req.params;
+    try {
+        const { rows: customer } = await connection.query(`SELECT * FROM customers WHERE id = $1`, [id]);
+        console.log(customer)
+    res.send(customer);
+    } catch (error) {
+        res.status(500).send("Erro no servidor")
+    }
+    
+}
 
 export async function postCostumers(req, res){
-    const clients = req.body
-    const entrySchema = joi.object({
+    const newClients = req.body
+    const clientsSchema = joi.object({
         name: joi.string().required(),
-        cpf: joi.string().length(11).required(),
-        phone: joi.string().length(11).required(),
+        cpf: joi.string().length(11).pattern(/^[0-9]+$/).required(),
+        phone: joi.string().min(10).max(11).pattern(/^[0-9]+$/).required(),
         birthday: joi.date().required()
       });
-      const { error } = entrySchema.validate(entry);
+      const { error } = clientsSchema.validate(newClients);
       if (error) {
         return res.sendStatus(400);
       }
-    //precisa verificar tbem se o CPF já não existe
     try {
-        
-        await connection.query('INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4)', [clients.name, clients.phone, clients.cpf, clients.birthday])
-        res.sedStatus(201)
+        const customers = await connection.query(`SELECT cpf FROM customers`)
+        const customersCPF = customers.rows.map(e => e.cpf)
+        const existCPF = customersCPF.find(e => e == newClients.cpf)
+        if(existCPF){
+            return res.status(409).send("CPF já existe")
+        }
+        await connection.query(`INSERT INTO customers (name, phone, cpf, birthday) VALUES ('${newClients.name}', '${newClients.phone}', '${newClients.cpf}', '${newClients.birthday}')`)
+        res.sendStatus(201)
     } catch (error) {
-        res.status(500).send("Erro no servidor")
+        res.status(500).send("Erro no servidor") 
     }
 
 }
