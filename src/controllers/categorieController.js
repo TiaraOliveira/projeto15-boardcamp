@@ -7,18 +7,22 @@ export async function getCategorie(req, res){
 }
 
 export async function postCategories(req, res){
-    const newCategories = req.body
-    console.log(req)
+    const newCategories = req.body;
     const entrySchema = joi.object({
         name: joi.string().required()
-      });
-      const { error } = entrySchema.validate(newCategories);
-      if (error) {
+    });
+    const { error } = entrySchema.validate(newCategories);
+    if (error) {
         return res.sendStatus(400);
-      }
+    }
      
     try {
-        
+        const categories = await connection.query(`SELECT name FROM categories`)
+        const categoriesName = categories.rows.map(e => e.name)
+        const existName = categoriesName.find(e => e == newCategories.name)
+        if(existName){
+            return res.status(409).send("Categoria já existe")
+        }
         await connection.query(`INSERT INTO categories (name) VALUES ('${newCategories.name}');`)
         res.status(200).send("Categoria cadastrado com sucesso");
     } catch (error) {
