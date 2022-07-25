@@ -24,14 +24,10 @@ export async function getGames(req, res){
         JOIN categories 
         ON games."categoryId"=categories.id
         `);
-        
         res.send(games);
-
-     
     } catch (error) {
         res.status(500).send("Erro no servidor")
     }
-    
 }
 
 export async function postGames(req, res){
@@ -56,7 +52,7 @@ export async function postGames(req, res){
         if(existGame){
             return res.status(409).send("Categoria já existe")
         }
-        await connection.query(`INSERT INTO games.*) VALUES ('${newGame.name}', '${newGame.image}', '${newGame.stockTotal}', '${newGame.categoryId}', '${newGame.pricePerDay}')`)
+        await connection.query('INSERT INTO games (name, image, "stockTotal", "categoryId", "pricePerDay") VALUES ($1, $2, $3, $4, $5)', [newGame.name, newGame.image, newGame.stockTotal, newGame.categoryId, newGame.pricePerDay])
         res.sendStatus(201)
     } catch (error) {
         console.log(error)

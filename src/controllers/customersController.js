@@ -1,5 +1,6 @@
 import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
+import dayjs from 'dayjs';
 
 export async function getCostumers(req, res){
 
@@ -25,6 +26,12 @@ export async function getCostumers(req, res){
 }
 export async function getCostumersbyId(req, res){
     const {id} = req.params;
+    const ID = await connection.query(`SELECT * FROM customers`)
+    const searchId = ID.rows.map(e => e.id)
+    const existId = searchId.find(e => e = id)
+    if(existId){
+        return res.status(404).send("Id não existe")
+    }
     try {
         const { rows: customer } = await connection.query(`SELECT * FROM customers WHERE id = $1`, [id]);
         res.send(customer);
@@ -36,11 +43,13 @@ export async function getCostumersbyId(req, res){
 
 export async function postCostumers(req, res){
     const newClients = req.body
+    const day = dayjs().format("YYYY-MM-DD");
+    
     const clientsSchema = joi.object({
         name: joi.string().required(),
         cpf: joi.string().length(11).pattern(/^[0-9]+$/).required(),
         phone: joi.string().min(10).max(11).pattern(/^[0-9]+$/).required(),
-        birthday: joi.date().required()
+        birthday: joi.date().iso().less(day).required()
       });
       const { error } = clientsSchema.validate(newClients);
       if (error) {
@@ -62,6 +71,28 @@ export async function postCostumers(req, res){
 }
 
 export async function setCostumers(req, res){
-    console.log("aqui")
-
+    const id = req.params.id;
+    const newClients = req.body
+    const clientsSchema = joi.object({
+        name: joi.string().required(),
+        cpf: joi.string().length(11).pattern(/^[0-9]+$/).required(),
+        phone: joi.string().min(10).max(11).pattern(/^[0-9]+$/).required(),
+        birthday: joi.date().raw().required()
+      });
+      const { error } = clientsSchema.validate(newClients);
+      if (error) {
+        return res.sendStatus(400);
+      }
+    try {
+        const customers = await connection.query(`SELECT cpf FROM customers`)
+        const customersCPF = customers.rows.map(e => e.cpf)
+        const existCPF = customersCPF.find(e => e == newClients.cpf)
+        if(existCPF){
+            return res.status(409).send("CPF já existe")
+        }
+        await connection.query(`UPDATE customers SET name='${newClients.name}', phone='${newClients.phone}', cpf='${newClients.cpf}', birthday='${newClients.birthday}' WHERE id = ${id})`)
+        res.sendStatus(201)
+    } catch (error) {
+        res.status(500).send("Erro no servidor") 
+    }
 }

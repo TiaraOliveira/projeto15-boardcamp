@@ -19,11 +19,12 @@ export async function postCategories(req, res){
     try {
         const categories = await connection.query(`SELECT name FROM categories`)
         const categoriesName = categories.rows.map(e => e.name)
-        const existName = categoriesName.find(e => e == newCategories.name)
+        const newCategoriesName = (newCategories.name).toLowerCase()
+        const existName = categoriesName.find(e => e == newCategoriesName)
         if(existName){
             return res.status(409).send("Categoria já existe")
         }
-        await connection.query(`INSERT INTO categories (name) VALUES ('${newCategories.name}');`)
+        await connection.query(`INSERT INTO categories (name) VALUES ('${newCategoriesName}');`)
         res.status(200).send("Categoria cadastrado com sucesso");
     } catch (error) {
         console.log(error)
