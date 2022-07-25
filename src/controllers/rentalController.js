@@ -4,11 +4,33 @@ import dayjs from 'dayjs';
 
 export async function getRental(req, res){
     try {
-       const { rows: games } = await connection.query('SELECT * FROM rentals');
-       res.send(games);
+       const {rows:rental} = await connection.query(
+           `
+           SELECT r.*,
+              
+                     jsonb_build_object(
+                            'id', c.id,
+                            'name', c.name 
+                            ) AS customer,
+                     jsonb_build_object(
+                        'id', g.id,
+                        'name', g.name,
+                        'categoryId', g."categoryId"
+                       
+                       
+                    ) AS game
+                
+                FROM rentals r
+                 join games g on g.id = r."gameId"
+                 join customers c on c.id = r."customerId"
+                
+           `)
+       res.send(rental);
+       console.log(rental)
 
-     //- Para a rota `/games?name=ba`, deve ser retornado uma array somente com os jogos que comecem com "ba", como "Banco Imobiliário", "Batalha Naval", etc
+    
     } catch (error) {
+        console.log(error)
         res.status(500).send("Erro no servidor")
     }
 }
