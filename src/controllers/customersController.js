@@ -22,23 +22,17 @@ export async function getCostumers(req, res){
     } catch (error) {
         res.status(500).send("Erro no servidor")
     }
-    
 }
 export async function getCostumersbyId(req, res){
-    const {id} = req.params;
-    const ID = await connection.query(`SELECT * FROM customers`)
-    const searchId = ID.rows.map(e => e.id)
-    const existId = searchId.find(e => e = id)
-    if(existId){
-        return res.status(404).send("Id não existe")
-    }
+    const id = parseInt(req.params.id);
     try {
-        const { rows: customer } = await connection.query(`SELECT * FROM customers WHERE id = $1`, [id]);
-        res.send(customer);
-    } catch (error) {
+        const customersById = await connection.query(`SELECT * FROM customers WHERE customers.id = $1`, [id])
+        const customerById = customersById.rows[0];
+        if(!customerById) return res.sendStatus(404);
+        res.send(customerById);
+     } catch (error) {
         res.status(500).send("Erro no servidor")
     }
-    
 }
 
 export async function postCostumers(req, res){
@@ -67,7 +61,6 @@ export async function postCostumers(req, res){
     } catch (error) {
         res.status(500).send("Erro no servidor") 
     }
-
 }
 
 export async function setCostumers(req, res){
@@ -86,11 +79,13 @@ export async function setCostumers(req, res){
     try {
         const customers = await connection.query(`SELECT cpf FROM customers`)
         const customersCPF = customers.rows.map(e => e.cpf)
+        console.log(newClients.cpf)
         const existCPF = customersCPF.find(e => e == newClients.cpf)
-        if(existCPF){
+        console.log(existCPF)
+        if(existCPF != newClients.cpf && existCPF){
             return res.status(409).send("CPF já existe")
         }
-        await connection.query(`UPDATE customers SET name='${newClients.name}', phone='${newClients.phone}', cpf='${newClients.cpf}', birthday='${newClients.birthday}' WHERE id = ${id})`)
+        await connection.query(`UPDATE customers SET name='${newClients.name}', phone='${newClients.phone}', cpf='${newClients.cpf}', birthday='${newClients.birthday}' WHERE id = ${id}`)
         res.sendStatus(201)
     } catch (error) {
         res.status(500).send("Erro no servidor") 
