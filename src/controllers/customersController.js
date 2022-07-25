@@ -66,28 +66,31 @@ export async function postCostumers(req, res){
 export async function setCostumers(req, res){
     const id = req.params.id;
     const newClients = req.body
+    const day = dayjs().format("YYYY-MM-DD");
     const clientsSchema = joi.object({
         name: joi.string().required(),
         cpf: joi.string().length(11).pattern(/^[0-9]+$/).required(),
         phone: joi.string().min(10).max(11).pattern(/^[0-9]+$/).required(),
-        birthday: joi.date().raw().required()
+        birthday: joi.date().iso().less(day).required()
       });
       const { error } = clientsSchema.validate(newClients);
       if (error) {
         return res.sendStatus(400);
       }
     try {
-        const customers = await connection.query(`SELECT cpf FROM customers`)
-        const customersCPF = customers.rows.map(e => e.cpf)
-        console.log(newClients.cpf)
-        const existCPF = customersCPF.find(e => e == newClients.cpf)
-        console.log(existCPF)
-        if(existCPF != newClients.cpf && existCPF){
-            return res.status(409).send("CPF já existe")
+        const customers = await connection.query('SELECT cpf FROM customers');
+        const customersCpf = customers.rows.map(e => e.cpf);
+        const {rows: customerOldCpf} = await connection.query(`SELECT cpf FROM customers WHERE id=$1;`, [id]);
+        console.log(customerOldCpf[0].cpf);
+        const customersCpfOutsideUpdate = customersCpf.filter(e => e != customerOldCpf[0].cpf);
+        const repeatCpf = customersCpfOutsideUpdate.find(e => e == newClients.cpf)
+        if(repeatCpf){
+            return res.status(409).send('Esse cpf já está cadastrado no sistema.')
         }
         await connection.query(`UPDATE customers SET name='${newClients.name}', phone='${newClients.phone}', cpf='${newClients.cpf}', birthday='${newClients.birthday}' WHERE id = ${id}`)
         res.sendStatus(201)
     } catch (error) {
+        console.log(error)
         res.status(500).send("Erro no servidor") 
     }
 }
