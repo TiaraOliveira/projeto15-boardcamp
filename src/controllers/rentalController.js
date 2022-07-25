@@ -7,8 +7,7 @@ export async function getRental(req, res){
        const {rows:rental} = await connection.query(
            `
            SELECT r.*,
-              
-                     jsonb_build_object(
+                       jsonb_build_object(
                             'id', c.id,
                             'name', c.name 
                             ) AS customer,
@@ -16,9 +15,7 @@ export async function getRental(req, res){
                         'id', g.id,
                         'name', g.name,
                         'categoryId', g."categoryId"
-                       
-                       
-                    ) AS game
+            ) AS game
                 
                 FROM rentals r
                  join games g on g.id = r."gameId"
@@ -26,7 +23,7 @@ export async function getRental(req, res){
                 
            `)
        res.send(rental);
-       console.log(rental)
+      
 
     
     } catch (error) {
@@ -57,7 +54,7 @@ export async function postRental(req, res){
        
         res.status(201).send("Game novo inserido")
     } catch (error) {
-        console.log(error)
+        
         res.status(500).send("Erro no servidor")
     }
 
@@ -68,7 +65,22 @@ export async function deleteRental(req, res){
     const rental = await connection.query(`SELECT id FROM rentals`)
     
         const rentalId = rental.rows.map(e => e.id)
-        console.log(rentalId)
+       
+        const existGame = rentalId.find(e => e = id)
+        console.log(existGame)
+        if(existGame){
+            await connection.query(`DELETE FROM rentals WHERE id = ${id};`)
+        }
+}
+
+
+export async function finishRentals(req, res){
+    console.log("a")
+    const {id} = req.params;
+    const rental = await connection.query(`SELECT id FROM rentals`)
+    
+        const rentalId = rental.rows.map(e => e.id)
+       
         const existGame = rentalId.find(e => e = id)
         console.log(existGame)
         if(existGame){

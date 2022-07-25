@@ -2,11 +2,32 @@ import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
 
 export async function getGames(req, res){
-    try {
-       const { rows: games } = await connection.query('SELECT * FROM games');
-       res.send(games);
 
-     //- Para a rota `/games?name=ba`, deve ser retornado uma array somente com os jogos que comecem com "ba", como "Banco Imobiliário", "Batalha Naval", etc
+    const name = req.query.name;
+
+    if (name){
+        name = name.toLowerCase()
+        const { rows: games } = await connection.query(`
+            SELECT games.*, categories.name as "categoryName"
+            FROM games 
+            JOIN categories 
+            ON games."categoryId"=categories.id
+            WHERE lower(games.name) LIKE $1
+        `, [name +"%"])
+        return res.send(games)
+    }
+   
+    try {
+       const { rows: games } = await connection.query(`
+        SELECT games.*, categories.name as "categoryName"
+        FROM games 
+        JOIN categories 
+        ON games."categoryId"=categories.id
+        `);
+        
+        res.send(games);
+
+     
     } catch (error) {
         res.status(500).send("Erro no servidor")
     }
@@ -35,7 +56,7 @@ export async function postGames(req, res){
         if(existGame){
             return res.status(409).send("Categoria já existe")
         }
-        await connection.query(`INSERT INTO games (name, image, "stockTotal", "categoryId", "pricePerDay") VALUES ('${newGame.name}', '${newGame.image}', '${newGame.stockTotal}', '${newGame.categoryId}', '${newGame.pricePerDay}')`)
+        await connection.query(`INSERT INTO games.*) VALUES ('${newGame.name}', '${newGame.image}', '${newGame.stockTotal}', '${newGame.categoryId}', '${newGame.pricePerDay}')`)
         res.sendStatus(201)
     } catch (error) {
         console.log(error)

@@ -2,6 +2,19 @@ import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
 
 export async function getCostumers(req, res){
+
+    const cpf = req.query.cpf;
+    console.log(cpf)
+
+    if (cpf){
+       
+        const { rows: customers } = await connection.query(`
+            SELECT * FROM customers 
+            WHERE customers.cpf) LIKE $1
+        `, [cpf +"%"])
+        return res.send(customers)
+    }
+   
     try {
         const { rows: customers } = await connection.query('SELECT * FROM customers');
     res.send(customers);
@@ -14,8 +27,7 @@ export async function getCostumersbyId(req, res){
     const {id} = req.params;
     try {
         const { rows: customer } = await connection.query(`SELECT * FROM customers WHERE id = $1`, [id]);
-        console.log(customer)
-    res.send(customer);
+        res.send(customer);
     } catch (error) {
         res.status(500).send("Erro no servidor")
     }
@@ -46,5 +58,10 @@ export async function postCostumers(req, res){
     } catch (error) {
         res.status(500).send("Erro no servidor") 
     }
+
+}
+
+export async function setCostumers(req, res){
+    console.log("aqui")
 
 }
